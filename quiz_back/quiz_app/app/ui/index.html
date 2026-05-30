@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quiz Service UI</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">Quiz Service UI</div>
+        <div class="row">
+          <div class="pill" id="whoamiPill">Not authenticated</div>
+          <button class="btn" id="logoutBtn" title="Logout" disabled>Logout</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel">
+          <h2>Auth</h2>
+          <div class="grid2">
+            <label class="field">
+              <div class="label">Username</div>
+              <input id="loginUsername" type="text" autocomplete="username" placeholder="admin" />
+            </label>
+            <label class="field">
+              <div class="label">Password</div>
+              <input id="loginPassword" type="password" autocomplete="current-password" placeholder="admin123" />
+            </label>
+          </div>
+          <div class="row">
+            <button class="btn primary" id="loginBtn">Login</button>
+            <button class="btn" id="meBtn">/auth/me</button>
+          </div>
+          <div class="hint">
+            Demo users (if seed enabled): <code>admin/admin123</code>, <code>player1/password123</code>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Admin</h2>
+          <div class="tabs">
+            <button class="tab active" data-tab="teams">Teams</button>
+            <button class="tab" data-tab="questions">Questions</button>
+            <button class="tab" data-tab="games">Games</button>
+          </div>
+
+          <div class="tabpane" id="tab-teams">
+            <div class="row">
+              <label class="field grow">
+                <div class="label">New Team</div>
+                <input id="teamName" type="text" placeholder="Team X" />
+              </label>
+              <button class="btn primary" id="createTeamBtn">Create</button>
+              <button class="btn" id="refreshTeamsBtn">Refresh</button>
+            </div>
+            <div class="list" id="teamsList"></div>
+          </div>
+
+          <div class="tabpane hidden" id="tab-questions">
+            <div class="row wrap">
+              <label class="field grow">
+                <div class="label">Question Text</div>
+                <input id="questionText" type="text" placeholder="2+2?" />
+              </label>
+              <label class="field">
+                <div class="label">Correct Index</div>
+                <input id="correctIndex" type="number" min="0" value="0" />
+              </label>
+            </div>
+            <div class="grid2">
+              <label class="field">
+                <div class="label">Option 0</div>
+                <input class="opt" data-idx="0" type="text" placeholder="3" />
+              </label>
+              <label class="field">
+                <div class="label">Option 1</div>
+                <input class="opt" data-idx="1" type="text" placeholder="4" />
+              </label>
+              <label class="field">
+                <div class="label">Option 2</div>
+                <input class="opt" data-idx="2" type="text" placeholder="" />
+              </label>
+              <label class="field">
+                <div class="label">Option 3</div>
+                <input class="opt" data-idx="3" type="text" placeholder="" />
+              </label>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="createQuestionBtn">Create</button>
+              <button class="btn" id="refreshQuestionsBtn">Refresh</button>
+            </div>
+            <div class="list" id="questionsList"></div>
+          </div>
+
+          <div class="tabpane hidden" id="tab-games">
+            <div class="row wrap">
+              <label class="field">
+                <div class="label">Scheduled At (ISO)</div>
+                <input id="scheduledAt" type="text" placeholder="2026-01-01T00:00:00Z" />
+              </label>
+              <button class="btn" id="refreshGamesBtn">Refresh</button>
+            </div>
+            <div class="split">
+              <div>
+                <div class="subhead">Select Teams</div>
+                <div class="list compact" id="teamsPick"></div>
+              </div>
+              <div>
+                <div class="subhead">Select Questions</div>
+                <div class="list compact" id="questionsPick"></div>
+              </div>
+            </div>
+            <div class="row">
+              <button class="btn primary" id="createGameBtn">Create Game</button>
+            </div>
+            <div class="list" id="gamesList"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Player</h2>
+          <div class="row wrap">
+            <label class="field">
+              <div class="label">Game ID</div>
+              <input id="playerGameId" type="number" min="1" placeholder="1" />
+            </label>
+            <label class="field">
+              <div class="label">Team ID</div>
+              <input id="playerTeamId" type="number" min="1" placeholder="1" />
+            </label>
+            <button class="btn" id="connectWsBtn">Connect WS</button>
+            <button class="btn" id="loadCurrentBtn">Load Current Question</button>
+          </div>
+          <div class="card" id="currentCard">
+            <div class="muted">No game selected.</div>
+          </div>
+          <div class="list" id="realtimeLog"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Log</h2>
+          <pre class="log" id="log"></pre>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
+
