@@ -4,19 +4,26 @@ from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.deps import AdminUser, CurrentUser
+from app.models.game import GameTeam, TeamAnswer
+from app.models.question import Question, QuestionOption
+from app.models.team import Team
 from app.schemas.games import (
+    AnswerResultOut,
     CurrentQuestionResponse,
     GameCreate,
     GameOut,
+    GameResultsResponse,
     GameUpdate,
     NextQuestionResponse,
     StartGameResponse,
     SubmitAnswerRequest,
     SubmitAnswerResponse,
+    TeamResultOut,
 )
 from app.services.games import GameService
 from app.services.game_realtime import GameRealtime
@@ -47,6 +54,78 @@ async def get_game(db: DbDep, _: AdminUser, game_id: int):
     if game is None:
         raise HTTPException(status_code=404, detail="Game not found")
     return game
+
+
+@router.get("/{game_id}/results", response_model=GameResultsResponse)
+async def get_game_results(db: DbDep, _: AdminUser, game_id: int):
+    game = await GameService(db).get(game_id)
+    if game is None:
+        raise HTTPException(status_code=404, detail="Game not found")
+
+    team_rows = await db.execute(
+        select(GameTeam.team_id, Team.name, GameTeam.points)
+        .join(Team, Team.id == GameTeam.team_id)
+        .where(GameTeam.game_id == game_id)
+        .order_by(GameTeam.points.desc(), Team.name)
+    )
+    teams = [
+        TeamResultOut(team_id=team_id, name=name, points=points)
+        for team_id, name, points in team_rows.all()
+    ]
+
+    answer_rows = await db.execute(
+        select(
+            TeamAnswer.team_id,
+            Team.name,
+            TeamAnswer.question_id,
+            Question.text,
+            TeamAnswer.option_id,
+            QuestionOption.text,
+            TeamAnswer.is_correct,
+            TeamAnswer.within_time,
+            TeamAnswer.elapsed_ms,
+            TeamAnswer.answered_at,
+        )
+        .join(Team, Team.id == TeamAnswer.team_id)
+        .join(Question, Question.id == TeamAnswer.question_id)
+        .join(QuestionOption, QuestionOption.id == TeamAnswer.option_id)
+        .where(TeamAnswer.game_id == game_id)
+        .order_by(TeamAnswer.question_id, Team.name)
+    )
+    answers = [
+        AnswerResultOut(
+            team_id=team_id,
+            team_name=team_name,
+            question_id=question_id,
+            question_text=question_text,
+            option_id=option_id,
+            option_text=option_text,
+            is_correct=is_correct,
+            within_time=within_time,
+            elapsed_ms=elapsed_ms,
+            answered_at=answered_at,
+        )
+        for (
+            team_id,
+            team_name,
+            question_id,
+            question_text,
+            option_id,
+            option_text,
+            is_correct,
+            within_time,
+            elapsed_ms,
+            answered_at,
+        ) in answer_rows.all()
+    ]
+
+    return GameResultsResponse(
+        game_id=game.id,
+        scheduled_at=game.scheduled_at,
+        status=game.status,
+        teams=teams,
+        answers=answers,
+    )
 
 
 @router.patch("/{game_id}", response_model=GameOut)

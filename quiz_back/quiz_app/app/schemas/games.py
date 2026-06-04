@@ -63,3 +63,30 @@ class CurrentQuestionResponse(BaseModel):
     server_now_ms: int
     time_left_ms: int
     question: QuestionOut | None = None
+
+
+class TeamResultOut(BaseModel):
+    team_id: int
+    name: str
+    points: int
+
+
+class AnswerResultOut(BaseModel):
+    team_id: int
+    team_name: str
+    question_id: int
+    question_text: str
+    option_id: int
+    option_text: str
+    is_correct: bool
+    within_time: bool
+    elapsed_ms: int
+    answered_at: datetime
+
+
+class GameResultsResponse(BaseModel):
+    game_id: int
+    scheduled_at: datetime
+    status: str
+    teams: list[TeamResultOut]
+    answers: list[AnswerResultOut]

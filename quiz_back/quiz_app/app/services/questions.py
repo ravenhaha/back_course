@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -57,7 +57,9 @@ class QuestionService:
         return await self.get(question.id)  # with options
 
     async def delete(self, question_id: int) -> bool:
-        res = await self.db.execute(delete(Question).where(Question.id == question_id))
+        question = await self.get(question_id)
+        if question is None:
+            return False
+        await self.db.delete(question)
         await self.db.commit()
-        return bool(res.rowcount)
-
+        return True

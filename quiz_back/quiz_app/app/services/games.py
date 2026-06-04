@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -57,8 +57,12 @@ class GameService:
         if scheduled_at is not None:
             game.scheduled_at = scheduled_at
         if team_ids is not None:
+            game.teams = []
+            await self.db.flush()
             game.teams = [GameTeam(team_id=t_id) for t_id in team_ids]
         if question_ids is not None:
+            game.questions = []
+            await self.db.flush()
             game.questions = [
                 GameQuestion(question_id=q_id, order_index=idx) for idx, q_id in enumerate(question_ids)
             ]
@@ -135,7 +139,7 @@ class GameService:
             raise ValueError("Option does not belong to current question")
 
         # Check timer: 30 seconds
-        now_ms = int(datetime.utcnow().timestamp() * 1000)
+        now_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
         elapsed_ms = max(0, now_ms - state.question_started_at_ms)
         within_time = elapsed_ms <= state.round_seconds * 1000
         if not within_time:
